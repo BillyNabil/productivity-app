@@ -1,0 +1,72 @@
+# Netlify Configuration for Productivity App
+
+[build]
+# Build command
+command = "npm run build"
+# Directory to publish
+publish = ".next"
+# Node version
+node_version = "18.18.0"
+
+# Environment variables for build
+[build.environment]
+NODE_ENV = "production"
+
+# Functions configuration (for serverless functions)
+[functions]
+node_bundler = "esbuild"
+directory = "functions"
+
+# Redirects and rewrites
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
+
+# Headers configuration
+[[headers]]
+for = "/*"
+[headers.values]
+X-Frame-Options = "DENY"
+X-Content-Type-Options = "nosniff"
+X-XSS-Protection = "1; mode=block"
+Referrer-Policy = "strict-origin-when-cross-origin"
+Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+# Cache headers for static assets
+[[headers]]
+for = "/_next/static/*"
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+
+# Cache headers for build ID
+[[headers]]
+for = "/_next/data/*"
+[headers.values]
+Cache-Control = "public, max-age=0, must-revalidate"
+
+# Error handling
+[[redirects]]
+from = "/404"
+to = "/404.html"
+status = 404
+
+# Development settings
+[context.develop.environment]
+NODE_ENV = "development"
+
+# Deployment contexts
+[context.production]
+# Production environment
+command = "npm run build"
+
+[context.preview]
+# Preview deployments
+command = "npm run build"
+
+# Build settings for different platforms
+[dev]
+command = "npm run dev"
+port = 3000
+publish = "public"
+targetPort = 3000
