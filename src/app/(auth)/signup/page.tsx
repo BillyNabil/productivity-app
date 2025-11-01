@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
+import { ensureUserSettings } from "@/lib/services/user-settings-service";
 import { CheckCircle2, Sparkles } from "lucide-react";
 
 const signupSchema = z
@@ -45,7 +46,7 @@ export default function SignupPage() {
 
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signUp({
+      const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
@@ -56,6 +57,14 @@ export default function SignupPage() {
       if (error) {
         setError(error.message);
         return;
+      }
+
+      // Ensure user settings are created (fallback for trigger)
+      if (authData?.user?.id) {
+        const settingsCreated = await ensureUserSettings(supabase);
+        if (!settingsCreated) {
+          console.warn("Warning: Could not ensure user settings were created");
+        }
       }
 
       setSuccess(true);

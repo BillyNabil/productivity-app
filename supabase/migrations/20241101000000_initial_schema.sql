@@ -159,12 +159,17 @@ CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON tasks
 CREATE TRIGGER update_user_settings_updated_at BEFORE UPDATE ON user_settings
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Function to create default user settings on signup
+-- Function to create default user settings on signup (with error handling)
 CREATE OR REPLACE FUNCTION create_user_settings()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO user_settings (user_id)
-  VALUES (NEW.id);
+  -- Only create settings if the user was created successfully
+  -- and has an email
+  IF NEW.email IS NOT NULL THEN
+    INSERT INTO user_settings (user_id)
+    VALUES (NEW.id)
+    ON CONFLICT (user_id) DO NOTHING;
+  END IF;
   RETURN NEW;
 END;
 $$ language 'plpgsql';

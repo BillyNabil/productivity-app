@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { User } from '@supabase/supabase-js';
 import { UserSettings } from '@/types/user';
 import { createClient } from '@/lib/supabase/client';
+import { ensureUserSettings } from '@/lib/services/user-settings-service';
 
 interface AuthStore {
   user: User | null;
@@ -63,13 +64,18 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   signUp: async (email: string, password: string) => {
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
+    const { data: authData, error } = await supabase.auth.signUp({
       email,
       password,
     });
     
     if (error) {
       return { error };
+    }
+
+    // Ensure user_settings are created (fallback for trigger)
+    if (authData?.user?.id) {
+      await ensureUserSettings(supabase);
     }
     
     return { error: null };
